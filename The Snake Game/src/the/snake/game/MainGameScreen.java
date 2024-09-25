@@ -9,14 +9,16 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
     static final int SCREEN_WIDTH = 720;
     static final int SCREEN_HEIGHT = 720;
-    static final int UNIT_SIZE = 40;
+    static final int UNIT_SIZE = 120;
+    static final int DEFAULT_SNAKE_SIZE = 4;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE;
-    static final int DELAY = 100;
+    static final int MAX_SNAKE_SIZE = GAME_UNITS / UNIT_SIZE;
+    static final int DELAY = 150;
 
     final int x[] = new int[GAME_UNITS];
     final int y[] = new int[GAME_UNITS];
 
-    int snakeBody = 4;
+    int snakeBody = DEFAULT_SNAKE_SIZE;
     int foodEaten;
     int foodCoorX;
     int foodCoorY;
@@ -26,9 +28,11 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
     char direction = 'R';
     boolean isRunning = false;
+    boolean gameWin = false;
     Timer timer;
     Random random;
     JButton retryButton;
+    KeyChecker keyboard = new KeyChecker();
 
     public MainGameScreen() {
         random = new Random();
@@ -36,7 +40,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
         setBackground(Color.BLACK);
         setVisible(true);
         setFocusable(true);
-        addKeyListener(new KeyChecker());
+        addKeyListener(keyboard);
 
         foodImage = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\apple.png").getImage();
         snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\snake.png").getImage();
@@ -88,23 +92,38 @@ public class MainGameScreen extends JPanel implements ActionListener {
                 g.setColor(new Color(0, 191, 99));
                 g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
             }
-        } else {
+            if (snakeBody == MAX_SNAKE_SIZE) {
+                gameWin(g);
+            }
+        } else if (!gameWin) {
             gameOver(g);
         }
     }
 
     public void spawnFood() {
-        foodCoorX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE) - 1) * UNIT_SIZE;
-        foodCoorY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE) - 1) * UNIT_SIZE;
+        // Check if snake is already at max size
+        if (snakeBody == MAX_SNAKE_SIZE) {
+            return;
+        } else {
+            boolean validPositionFound = false;
+            while (!validPositionFound) {
+                foodCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+                foodCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+                validPositionFound = true;
 
-        for (int i = 0; i < snakeBody; i++) {
-            if ((foodCoorX == x[i]) && (foodCoorY == y[i])) {
-                spawnFood();
+                // Check overlap snake
+                for (int i = 0; i < snakeBody; i++) {
+                    if ((foodCoorX == x[i]) && (foodCoorY == y[i])) {
+                        validPositionFound = false;
+                        break;
+                    }
+                }
             }
         }
     }
 
     public void checkFood() {
+        // Check snake head touch food
         if ((x[0] == foodCoorX) && (y[0] == foodCoorY)) {
             snakeBody++;
             foodEaten++;
@@ -118,35 +137,23 @@ public class MainGameScreen extends JPanel implements ActionListener {
             y[i] = y[i - 1];
         }
         switch (direction) {
-            case 'U' ->
-                y[0] = y[0] - UNIT_SIZE;
-            case 'D' ->
-                y[0] = y[0] + UNIT_SIZE;
-            case 'L' ->
-                x[0] = x[0] - UNIT_SIZE;
-            case 'R' ->
-                x[0] = x[0] + UNIT_SIZE;
-
+            case 'U' -> y[0] = y[0] - UNIT_SIZE;
+            case 'D' -> y[0] = y[0] + UNIT_SIZE;
+            case 'L' -> x[0] = x[0] - UNIT_SIZE;
+            case 'R' -> x[0] = x[0] + UNIT_SIZE;
         }
     }
 
     public void checkCollision() {
+        // Check collision with itself
         for (int i = snakeBody; i > 0; i--) {
             if ((x[0] == x[i]) && (y[0] == y[i])) {
                 isRunning = false;
             }
         }
 
-        if (x[0] < 0) {
-            isRunning = false;
-        }
-        if (x[0] > SCREEN_WIDTH - UNIT_SIZE) {
-            isRunning = false;
-        }
-        if (y[0] > SCREEN_HEIGHT - UNIT_SIZE) {
-            isRunning = false;
-        }
-        if (y[0] < 0) {
+        // Check collision with border
+        if (x[0] < 0 || x[0] > SCREEN_WIDTH - UNIT_SIZE || y[0] < 0 || y[0] > SCREEN_HEIGHT - UNIT_SIZE) {
             isRunning = false;
         }
 
@@ -156,11 +163,47 @@ public class MainGameScreen extends JPanel implements ActionListener {
     }
 
     public void gameOver(Graphics g) {
+
+        // Text
         g.setColor(Color.red);
         g.setFont(new Font("Tahoma", Font.BOLD, 75));
         FontMetrics metrics = getFontMetrics(g.getFont());
         g.drawString("Game Over", (SCREEN_WIDTH - metrics.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2);
 
+        // Transparent Button
+        retryButton = new JButton("Retry");
+        retryButton.setFont(new Font("Tahoma", Font.BOLD, 30));
+        retryButton.setFocusPainted(false);
+        retryButton.setContentAreaFilled(false);
+        retryButton.setBorderPainted(false);
+        retryButton.setFocusPainted(false);
+        retryButton.setOpaque(false);
+        retryButton.setBounds(SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 50, 200, 50);
+
+        retryButton.addActionListener(e -> resetGame());
+
+        setLayout(null);
+        add(retryButton);
+        repaint();
+    }
+
+    public void gameWin(Graphics g) {
+        timer.stop();
+        gameWin = true;
+        removeKeyListener(keyboard);
+
+        // Background rectangle
+        Color transparentColor = new Color(255, 255, 255, 128);
+        g.setColor(transparentColor);
+        g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Text
+        g.setColor(Color.GREEN);
+        g.setFont(new Font("Tahoma", Font.BOLD, 75));
+        FontMetrics metrics = getFontMetrics(g.getFont());
+        g.drawString("You Win", (SCREEN_WIDTH - metrics.stringWidth("You Win")) / 2, SCREEN_HEIGHT / 2);
+
+        // Transparent button
         retryButton = new JButton("Retry");
         retryButton.setFont(new Font("Tahoma", Font.BOLD, 30));
         retryButton.setFocusPainted(false);
@@ -178,8 +221,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
     }
 
     public void resetGame() {
-        new MainGameScreen();
-        snakeBody = 4;
+        gameWin = false;
+        snakeBody = DEFAULT_SNAKE_SIZE;
         foodEaten = 0;
         direction = 'R';
         isRunning = true;
@@ -189,6 +232,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
             y[i] = 0;
         }
 
+        addKeyListener(keyboard);
         spawnFood();
         timer.restart();
         removeAll();
@@ -206,7 +250,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
     }
 
     public class KeyChecker extends KeyAdapter {
-
         @Override
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
