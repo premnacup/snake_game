@@ -2,20 +2,16 @@ package the.snake.game;
 
 import javax.swing.*;
 
-public class Game extends JFrame{
-
-    static final int SCREEN_WIDTH = 720;
-    static final int SCREEN_HEIGHT = 720;
+public class Game extends JFrame {
 
     public Game() {
+        add(new MainMenu(this));
         this.setTitle("The Snake Game");
-        this.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
         this.setResizable(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLocationRelativeTo(null);
+        this.pack();
         this.setVisible(true);
-        
-        add(new MainMenu(this));
+        this.setLocationRelativeTo(null);
     }
 
     public static void main(String[] args) {
