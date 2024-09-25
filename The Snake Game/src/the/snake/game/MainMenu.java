@@ -6,9 +6,12 @@ import javax.swing.*;
 
 public class MainMenu extends JPanel {
 
+    static final int SCREEN_WIDTH = 720;
+    static final int SCREEN_HEIGHT = 720;
+
     public MainMenu(JFrame frame) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 
         JButton startButton = new JButton("Start Game");
         JLabel title = new JLabel("The Snake Game", JLabel.CENTER);
@@ -23,14 +26,11 @@ public class MainMenu extends JPanel {
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panel.add(Box.createVerticalGlue());
-        panel.add(title);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
-        panel.add(startButton);
-        panel.add(Box.createVerticalGlue());
-
-        setLayout(new BorderLayout());
-        add(panel, BorderLayout.CENTER);
+        add(Box.createVerticalGlue());
+        add(title);
+        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(startButton);
+        add(Box.createVerticalGlue());
 
         startButton.addActionListener((ActionEvent e) -> {
             frame.getContentPane().removeAll();
