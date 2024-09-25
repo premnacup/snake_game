@@ -28,9 +28,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         setBackground(Color.BLACK);
         setVisible(true);
-
-        setupKeyBindings();
-
+        setFocusable(true);
+        addKeyListener(new KeyChecker());
         startGame();
     }
 
@@ -146,46 +145,32 @@ public class MainGameScreen extends JPanel implements ActionListener {
         repaint();
     }
 
-    private void setupKeyBindings() {
-        InputMap inputMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actionMap = this.getActionMap();
+    public class KeyChecker extends KeyAdapter {
 
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0), "up");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "down");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), "left");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0), "right");
-
-        actionMap.put("up", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (direction != 'D') {
-                    direction = 'U';
-                }
+        @Override
+        public void keyPressed(KeyEvent e) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_A:
+                    if (direction != 'R') {
+                        direction = 'L';
+                    }
+                    break;
+                case KeyEvent.VK_D:
+                    if (direction != 'L') {
+                        direction = 'R';
+                    }
+                    break;
+                case KeyEvent.VK_W:
+                    if (direction != 'D') {
+                        direction = 'U';
+                    }
+                    break;
+                case KeyEvent.VK_S:
+                    if (direction != 'U') {
+                        direction = 'D';
+                    }
+                    break;
             }
-        });
-        actionMap.put("down", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (direction != 'U') {
-                    direction = 'D';
-                }
-            }
-        });
-        actionMap.put("left", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (direction != 'R') {
-                    direction = 'L';
-                }
-            }
-        });
-        actionMap.put("right", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (direction != 'L') {
-                    direction = 'R';
-                }
-            }
-        });
+        }
     }
 }
