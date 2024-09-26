@@ -8,8 +8,11 @@ public class MainMenu extends JPanel {
 
     static final int SCREEN_WIDTH = 720;
     static final int SCREEN_HEIGHT = 720;
+    ImageComponent background;
 
     public MainMenu(JFrame frame) {
+        background = new ImageComponent("The Snake Game\\src\\the\\snake\\game\\Assets\\background.png", SCREEN_WIDTH,
+                SCREEN_HEIGHT);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 
@@ -40,5 +43,11 @@ public class MainMenu extends JPanel {
             frame.repaint();
             mainGameScreen.requestFocusInWindow();
         });
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g); // Ensures proper rendering
+        background.paintComponent(g); // Draw the background image
     }
 }

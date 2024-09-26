@@ -24,10 +24,10 @@ public class MainGameScreen extends JPanel implements ActionListener {
     int foodCoorX;
     int foodCoorY;
 
+    Image backgroundImage;
     Image foodImage;
     Image snakeHead;
-    Image magnetPowerUpImage;
-    Image doubleLengthPowerUpImage;
+    Image PowerUpImage;
 
     char direction = 'R';
     boolean isRunning = false;
@@ -50,11 +50,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
         addKeyListener(keyboard);
 
         powerUp = new PowerUP();
-        // magnetPowerUpImage = new ImageIcon("The Snake
-        // Game\\src\\the\\snake\\game\\Assets\\dedSnake.png").getImage();
-        // doubleLengthPowerUpImage = new ImageIcon("The Snake
-        // Game\\src\\the\\snake\\game\\Assets\\dedSnake.png")
-        // .getImage();
+        PowerUpImage = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\powerUp.png").getImage();
+        backgroundImage = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\background.png").getImage();
         foodImage = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\apple.png").getImage();
         snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\snake.png").getImage();
 
@@ -79,22 +76,23 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
         Graphics2D g2d = (Graphics2D) g.create();
 
-        // Draw Grid
-        for (int i = 0; i <= SCREEN_WIDTH / UNIT_SIZE; i++) {
-            g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
-        }
-        for (int i = 0; i <= SCREEN_HEIGHT / UNIT_SIZE; i++) {
-            g.drawLine(0, i * UNIT_SIZE, SCREEN_WIDTH, i * UNIT_SIZE);
-        }
+        // Draw background
+        g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
 
         g.drawImage(foodImage, foodCoorX, foodCoorY, UNIT_SIZE, UNIT_SIZE, this);
 
         // Draw PowerUp (if any powerUp isn't active)
         if (!powerUp.isDoubleLengthActive() && !powerUp.isMagnetActive()) {
-            g.setColor(Color.cyan);
-            g.fillOval(powerUp.powerUpCoorX, powerUp.powerUpCoorY, UNIT_SIZE, UNIT_SIZE);
+            g.drawImage(PowerUpImage, powerUp.powerUpCoorX, powerUp.powerUpCoorY, UNIT_SIZE, UNIT_SIZE, this);
         }
 
+        // Draw shadow
+        for (int i = 0; i < snakeBody; i++) {
+            g.setColor(new Color(0, 0, 0, 100));
+            g.fillRect(x[i] + 5, y[i] + 5, UNIT_SIZE, UNIT_SIZE);
+        }
+
+        // Draw Snake Head
         if (snakeHead != null) {
             g2d.translate(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 2);
 
