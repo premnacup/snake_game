@@ -8,7 +8,7 @@ public class MainMenu extends JPanel {
 
     static final int SCREEN_WIDTH = 720;
     static final int SCREEN_HEIGHT = 720;
-    ImageComponent background;
+    private ImageComponent background;
 
     public MainMenu(JFrame frame) {
         background = new ImageComponent("The Snake Game\\src\\the\\snake\\game\\Assets\\background.png", SCREEN_WIDTH,
