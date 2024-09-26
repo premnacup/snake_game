@@ -194,7 +194,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
         // Check snake head touch food
         if (powerUp.isMagnetActive()) {
-            if (Math.abs(x[0] - foodCoorX) <= UNIT_SIZE && Math.abs(y[0] - foodCoorY) <= UNIT_SIZE) {
+            if (Math.abs(x[0] - foodCoorX) <= UNIT_SIZE * 2 && Math.abs(y[0] - foodCoorY) <= UNIT_SIZE * 2) {
                 snakeBody++;
                 foodEaten++;
                 spawnFood();
