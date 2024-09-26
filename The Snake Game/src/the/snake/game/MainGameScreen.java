@@ -92,7 +92,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
             g.setColor(Color.cyan);
             g.fillOval(powerUp.powerUpCoorX, powerUp.powerUpCoorY, UNIT_SIZE, UNIT_SIZE);
         }
-        
 
         if (snakeHead != null) {
             g2d.translate(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 2);
@@ -187,8 +186,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
                 System.out.println("double");
                 powerUp.activateDoubleLength();
             }
+            spawnPowerUp();
         }
-        spawnPowerUp();
     }
 
     public void checkFood() {
