@@ -18,8 +18,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
     final int x[] = new int[GAME_UNITS];
     final int y[] = new int[GAME_UNITS];
 
-    // int snakeBody = DEFAULT_SNAKE_SIZE;
-    int snakeBody = (GAME_UNITS / UNIT_SIZE) - 1;
+    int snakeBody = DEFAULT_SNAKE_SIZE;
+    // int snakeBody = (GAME_UNITS / UNIT_SIZE) - 1;
     int foodEaten;
     int foodCoorX;
     int foodCoorY;
@@ -79,6 +79,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
         Graphics2D g2d = (Graphics2D) g.create();
 
+        // Draw Grid
         for (int i = 0; i <= SCREEN_WIDTH / UNIT_SIZE; i++) {
             g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
         }
@@ -88,7 +89,8 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
         g.drawImage(foodImage, foodCoorX, foodCoorY, UNIT_SIZE, UNIT_SIZE, this);
 
-        if (!powerUp.isDoubleLengthActive() || !powerUp.isMagnetActive()) {
+        // Draw PowerUp (if any powerUp isn't active)
+        if (!powerUp.isDoubleLengthActive() && !powerUp.isMagnetActive()) {
             g.setColor(Color.cyan);
             g.fillOval(powerUp.powerUpCoorX, powerUp.powerUpCoorY, UNIT_SIZE, UNIT_SIZE);
         }
@@ -107,16 +109,19 @@ public class MainGameScreen extends JPanel implements ActionListener {
             g2d.dispose();
         }
 
+        // Draw Snake
         for (int i = 1; i < snakeBody; i++) {
             g.setColor(new Color(0, 191, 99));
             g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
         }
 
+        // Check win condition
         if (snakeBody >= MAX_SNAKE_SIZE) {
             showGameWinOverlay = true;
             isRunning = false;
         }
 
+        // Draw Game Over and Game Win overlays
         if (showGameOverOverlay) {
             snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\dedSnake.png").getImage();
             gameOver(g);
@@ -131,6 +136,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
             return;
         } else {
             boolean validPositionFound = false;
+            // Find a valid position for the food (not overlapping with snake)
             while (!validPositionFound) {
                 foodCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
                 foodCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
@@ -149,41 +155,34 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
     public void spawnPowerUp() {
 
-        if (powerUp.isDoubleLengthActive() || powerUp.isMagnetActive()) {
-            System.out.println("Not spawning PowerUp");
+        // Check if snake is already at max size
+        if (snakeBody >= MAX_SNAKE_SIZE) {
             return;
         } else {
-            // Check if snake is already at max size
-            if (snakeBody >= MAX_SNAKE_SIZE) {
-                return;
-            } else {
-                boolean validPositionFound = false;
-                while (!validPositionFound) {
-                    System.out.println("Spawn PowerUp");
-                    powerUp.powerUpCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-                    powerUp.powerUpCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
-                    validPositionFound = true;
+            boolean validPositionFound = false;
+            while (!validPositionFound) {
+                powerUp.powerUpCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+                powerUp.powerUpCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+                validPositionFound = true;
 
-                    // Check overlap snake
-                    for (int i = 0; i < snakeBody; i++) {
-                        if ((powerUp.powerUpCoorX == x[i]) && (powerUp.powerUpCoorY == y[i])) {
-                            validPositionFound = false;
-                            break;
-                        }
+                // Check overlap snake
+                for (int i = 0; i < snakeBody; i++) {
+                    if ((powerUp.powerUpCoorX == x[i]) && (powerUp.powerUpCoorY == y[i])) {
+                        validPositionFound = false;
+                        break;
                     }
                 }
-                System.out.println(powerUp.powerUpCoorX + " " + powerUp.powerUpCoorY);
             }
         }
     }
 
     public void checkPowerUp() {
+        // Check if the snake head touches powerUp
         if (x[0] == powerUp.powerUpCoorX && y[0] == powerUp.powerUpCoorY) {
+            // Random powerUp
             if (random.nextBoolean()) {
-                System.out.println("magnet");
                 powerUp.activateMagnet();
             } else {
-                System.out.println("double");
                 powerUp.activateDoubleLength();
             }
             spawnPowerUp();
@@ -192,26 +191,39 @@ public class MainGameScreen extends JPanel implements ActionListener {
 
     public void checkFood() {
 
-        // Check snake head touch food
+        // Check if magnetActive
         if (powerUp.isMagnetActive()) {
+            // if food is in magnet's range of the snake head
             if (Math.abs(x[0] - foodCoorX) <= UNIT_SIZE * 2 && Math.abs(y[0] - foodCoorY) <= UNIT_SIZE * 2) {
-                snakeBody++;
+                growSnake(1);
                 foodEaten++;
                 spawnFood();
             }
         } else if (x[0] == foodCoorX && y[0] == foodCoorY) {
             if (powerUp.isDoubleLengthActive()) {
-                snakeBody += 2;
+                growSnake(2);
             } else {
-                snakeBody++;
+                growSnake(1);
             }
             foodEaten++;
             spawnFood();
         }
     }
 
-    public void move() {
+    /**
+     * Increases the size of the snake by the given length.
+     *
+     * @param length the number of units to grow the snake by
+     */
+    public void growSnake(int length) {
+        for (int i = 0; i < length; i++) {
+            x[snakeBody] = x[snakeBody - 1];
+            y[snakeBody] = y[snakeBody - 1];
+            snakeBody++;
+        }
+    }
 
+    public void move() {
         for (int i = snakeBody; i > 0; i--) {
             x[i] = x[i - 1];
             y[i] = y[i - 1];
@@ -222,7 +234,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
             case 'L' -> x[0] = x[0] - UNIT_SIZE;
             case 'R' -> x[0] = x[0] + UNIT_SIZE;
         }
-
     }
 
     public void checkCollision() {
@@ -344,7 +355,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
             checkPowerUp();
             checkFood();
             checkCollision();
-
         }
         repaint();
     }

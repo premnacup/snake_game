@@ -29,12 +29,13 @@ public class PowerUP {
     }
 
     private void startPowerUpTimer() {
+        if (powerUpTimer != null && powerUpTimer.isRunning()) {
+            powerUpTimer.stop();
+        }
 
-        System.out.println("Start PowerUp Timer");
         powerUpTimer = new Timer(POWERUP_DURATION, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Deactivating PowerUp");
                 deactivatePowerUps();
             }
         });
@@ -43,7 +44,6 @@ public class PowerUP {
     }
 
     public void deactivatePowerUps() {
-        System.out.println("PowerUp deactivated");
         magnetActive = false;
         doubleLengthActive = false;
     }
