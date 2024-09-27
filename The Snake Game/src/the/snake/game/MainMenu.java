@@ -47,7 +47,7 @@ public class MainMenu extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g); // Ensures proper rendering
-        background.paintComponent(g); // Draw the background image
+        super.paintComponent(g);
+        background.paintComponent(g);
     }
 }
