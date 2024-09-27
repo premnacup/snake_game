@@ -19,8 +19,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
     final int y[] = new int[GAME_UNITS];
 
     int snakeBody = DEFAULT_SNAKE_SIZE;
-    // int snakeBody = (GAME_UNITS / UNIT_SIZE) - 1;
-    int foodEaten;
     int foodCoorX;
     int foodCoorY;
 
@@ -34,6 +32,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
     boolean gameWin = false;
     boolean showGameOverOverlay = false;
     boolean showGameWinOverlay = false;
+    boolean directionChanged = false;
 
     Timer timer;
     Random random;
@@ -58,7 +57,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
         startGame();
     }
 
-    public final void startGame() {
+    private final void startGame() {
         spawnPowerUp();
         spawnFood();
         isRunning = true;
@@ -72,13 +71,14 @@ public class MainGameScreen extends JPanel implements ActionListener {
         draw(g);
     }
 
-    public void draw(Graphics g) {
+    private void draw(Graphics g) {
 
         Graphics2D g2d = (Graphics2D) g.create();
 
         // Draw background
         g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
 
+        // Draw food
         g.drawImage(foodImage, foodCoorX, foodCoorY, UNIT_SIZE, UNIT_SIZE, this);
 
         // Draw PowerUp (if any powerUp isn't active)
@@ -86,31 +86,47 @@ public class MainGameScreen extends JPanel implements ActionListener {
             g.drawImage(PowerUpImage, powerUp.powerUpCoorX, powerUp.powerUpCoorY, UNIT_SIZE, UNIT_SIZE, this);
         }
 
-        // Draw shadow
+        // Draw snake's shadow
         for (int i = 0; i < snakeBody; i++) {
             g.setColor(new Color(0, 0, 0, 100));
             g.fillRect(x[i] + 5, y[i] + 5, UNIT_SIZE, UNIT_SIZE);
         }
 
         // Draw Snake Head
-        if (snakeHead != null) {
-            g2d.translate(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 2);
-
-            switch (direction) {
-                case 'U' -> g2d.rotate(Math.toRadians(0));
-                case 'D' -> g2d.rotate(Math.toRadians(90 * 2));
-                case 'L' -> g2d.rotate(Math.toRadians(90 * 3));
-                case 'R' -> g2d.rotate(Math.toRadians(90));
-            }
-
-            g2d.drawImage(snakeHead, -UNIT_SIZE / 2, -UNIT_SIZE / 2, UNIT_SIZE, UNIT_SIZE, this);
-            g2d.dispose();
+        if (snakeHead != null && !powerUp.isDoubleLengthActive()) {
+            snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\snake.png").getImage();
+            drawSnakeHead(g2d);
         }
 
-        // Draw Snake
-        for (int i = 1; i < snakeBody; i++) {
-            g.setColor(new Color(0, 191, 99));
-            g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+        // Draw Snake with conditions
+        if (powerUp.isMagnetActive()) {
+            // Draw Snake with MagnetActive
+            g.setColor(Color.CYAN);
+            for (int i = 0; i < 3; i++) {
+                g.drawArc(x[0] - i * 10, y[0] - i * 10, UNIT_SIZE + i * 20, UNIT_SIZE + i * 20, 0, 360);
+            }
+            for (int i = 1; i < snakeBody; i++) {
+                g.setColor(new Color(0, 191, 99));
+                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+            }
+
+        } else if (powerUp.isDoubleLengthActive()) {
+            // Draw Snake with DoubleLengthActive
+            for (int i = 0; i < snakeBody; i++) {
+                float hue = (float) i / snakeBody;
+                g.setColor(Color.getHSBColor(hue, 1.0f, 1.0f));
+                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+            }
+
+            snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\snakeGlasses.png").getImage();
+            drawSnakeHead(g2d);
+
+        } else {
+            // Draw Snake
+            for (int i = 1; i < snakeBody; i++) {
+                g.setColor(new Color(0, 191, 99));
+                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+            }
         }
 
         // Check win condition
@@ -128,73 +144,107 @@ public class MainGameScreen extends JPanel implements ActionListener {
         }
     }
 
-    public void spawnFood() {
-        // Check if snake is already at max size
-        if (snakeBody >= MAX_SNAKE_SIZE) {
-            return;
-        } else {
-            boolean validPositionFound = false;
-            // Find a valid position for the food (not overlapping with snake)
-            while (!validPositionFound) {
-                foodCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-                foodCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
-                validPositionFound = true;
+    // drawSnakeHead manager (Rotate depending on direction)
+    private void drawSnakeHead(Graphics2D g2d) {
+        g2d.translate(x[0] + UNIT_SIZE / 2, y[0] + UNIT_SIZE / 2);
 
-                // Check overlap snake
-                for (int i = 0; i < snakeBody; i++) {
-                    if ((foodCoorX == x[i]) && (foodCoorY == y[i])) {
-                        validPositionFound = false;
-                        break;
-                    }
+        switch (direction) {
+            case 'U' -> g2d.rotate(Math.toRadians(0));
+            case 'D' -> g2d.rotate(Math.toRadians(90 * 2));
+            case 'L' -> g2d.rotate(Math.toRadians(90 * 3));
+            case 'R' -> g2d.rotate(Math.toRadians(90));
+        }
+
+        g2d.drawImage(snakeHead, -UNIT_SIZE / 2, -UNIT_SIZE / 2, UNIT_SIZE, UNIT_SIZE, this);
+        g2d.dispose();
+    }
+
+    private void spawnFood() {
+        int attempts = 0;
+        boolean validPositionFound = false;
+
+        while (!validPositionFound && attempts < 100) {
+            foodCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+            foodCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+            validPositionFound = true;
+
+            // Check if food overlaps with snake
+            for (int i = 0; i < snakeBody; i++) {
+                if (x[i] == foodCoorX && y[i] == foodCoorY) {
+                    validPositionFound = false;
+                    break;
                 }
             }
+            attempts++;
         }
     }
 
-    public void spawnPowerUp() {
-
-        // Check if snake is already at max size
+    private void spawnPowerUp() {
+        int attempts = 0;
+        // Check if the snake is already at max size
         if (snakeBody >= MAX_SNAKE_SIZE) {
             return;
+        }
+
+        // Calculate available space
+        double usedSpace = snakeBody; // occupied by the snake
+        double gameSpace = GAME_UNITS / UNIT_SIZE;
+        double availableSpace = gameSpace - usedSpace;
+
+        // Check if available space is less than 50% of the total
+        if (availableSpace <= gameSpace * 0.5) {
+            powerUp.deactivatePowerUps();
+            return; // Don't spawn power-up
         } else {
             boolean validPositionFound = false;
-            while (!validPositionFound) {
+            while (!validPositionFound && attempts < 100) {
+                // Generate random position
                 powerUp.powerUpCoorX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
                 powerUp.powerUpCoorY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
                 validPositionFound = true;
 
-                // Check overlap snake
+                // Check overlap with snake
                 for (int i = 0; i < snakeBody; i++) {
                     if ((powerUp.powerUpCoorX == x[i]) && (powerUp.powerUpCoorY == y[i])) {
-                        validPositionFound = false;
+                        validPositionFound = false; // Overlaps with snake
                         break;
                     }
                 }
+
+                // Check overlap with food
+                if ((powerUp.powerUpCoorX == foodCoorX) && (powerUp.powerUpCoorY == foodCoorY)) {
+                    validPositionFound = false;
+                }
+
+                attempts++;
             }
         }
     }
 
-    public void checkPowerUp() {
-        // Check if the snake head touches powerUp
-        if (x[0] == powerUp.powerUpCoorX && y[0] == powerUp.powerUpCoorY) {
-            // Random powerUp
-            if (random.nextBoolean()) {
-                powerUp.activateMagnet();
-            } else {
-                powerUp.activateDoubleLength();
+    private void checkPowerUp() {
+        // Check if powerUp is active then return
+        if (powerUp.isMagnetActive() || powerUp.isDoubleLengthActive()) {
+            return;
+        } else {
+            // Check if the snake head touches powerUp
+            if (x[0] == powerUp.powerUpCoorX && y[0] == powerUp.powerUpCoorY) {
+                // Random powerUp
+                if (random.nextBoolean()) {
+                    powerUp.activateMagnet();
+                } else {
+                    powerUp.activateDoubleLength();
+                }
+                spawnPowerUp();
             }
-            spawnPowerUp();
         }
     }
 
-    public void checkFood() {
-
+    private void checkFood() {
         // Check if magnetActive
         if (powerUp.isMagnetActive()) {
             // if food is in magnet's range of the snake head
             if (Math.abs(x[0] - foodCoorX) <= UNIT_SIZE * 2 && Math.abs(y[0] - foodCoorY) <= UNIT_SIZE * 2) {
                 growSnake(1);
-                foodEaten++;
                 spawnFood();
             }
         } else if (x[0] == foodCoorX && y[0] == foodCoorY) {
@@ -203,7 +253,6 @@ public class MainGameScreen extends JPanel implements ActionListener {
             } else {
                 growSnake(1);
             }
-            foodEaten++;
             spawnFood();
         }
     }
@@ -213,30 +262,32 @@ public class MainGameScreen extends JPanel implements ActionListener {
      *
      * @param length the number of units to grow the snake by
      */
-    public void growSnake(int length) {
+    private void growSnake(int length) {
         for (int i = 0; i < length; i++) {
-            x[snakeBody] = x[snakeBody - 1];
-            y[snakeBody] = y[snakeBody - 1];
-            snakeBody++;
+            x[snakeBody + i] = x[snakeBody - 1];
+            y[snakeBody + i] = y[snakeBody - 1];
         }
+        snakeBody += length;
     }
 
-    public void move() {
+    private void move() {
         for (int i = snakeBody; i > 0; i--) {
             x[i] = x[i - 1];
             y[i] = y[i - 1];
         }
+
         switch (direction) {
-            case 'U' -> y[0] = y[0] - UNIT_SIZE;
-            case 'D' -> y[0] = y[0] + UNIT_SIZE;
-            case 'L' -> x[0] = x[0] - UNIT_SIZE;
-            case 'R' -> x[0] = x[0] + UNIT_SIZE;
+            case 'U' -> y[0] -= UNIT_SIZE;
+            case 'D' -> y[0] += UNIT_SIZE;
+            case 'L' -> x[0] -= UNIT_SIZE;
+            case 'R' -> x[0] += UNIT_SIZE;
         }
+
     }
 
-    public void checkCollision() {
+    private void checkCollision() {
         // Check collision with itself
-        for (int i = snakeBody; i > 0; i--) {
+        for (int i = 1; i < snakeBody; i++) {
             if ((x[0] == x[i]) && (y[0] == y[i])) {
                 isRunning = false;
                 showGameOverOverlay = true;
@@ -255,7 +306,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
         }
     }
 
-    public void gameOver(Graphics g) {
+    private void gameOver(Graphics g) {
         timer.stop();
         gameWin = false;
         removeKeyListener(keyboard);
@@ -288,7 +339,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
         repaint();
     }
 
-    public void gameWin(Graphics g) {
+    private void gameWin(Graphics g) {
         timer.stop();
         gameWin = true;
         removeKeyListener(keyboard);
@@ -321,17 +372,14 @@ public class MainGameScreen extends JPanel implements ActionListener {
         repaint();
     }
 
-    public void resetGame() {
+    private void resetGame() {
         gameWin = false;
         snakeBody = DEFAULT_SNAKE_SIZE;
-        foodEaten = 0;
         direction = 'R';
         isRunning = true;
         showGameOverOverlay = false;
         showGameWinOverlay = false;
         powerUp.deactivatePowerUps();
-
-        snakeHead = new ImageIcon("The Snake Game\\src\\the\\snake\\game\\Assets\\snake.png").getImage();
 
         for (int i = 0; i < snakeBody; i++) {
             x[i] = 0;
@@ -350,6 +398,7 @@ public class MainGameScreen extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (isRunning) {
             move();
+            directionChanged = false;
             checkPowerUp();
             checkFood();
             checkCollision();
@@ -360,28 +409,34 @@ public class MainGameScreen extends JPanel implements ActionListener {
     public class KeyChecker extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT:
-                    if (direction != 'R') {
-                        direction = 'L';
-                    }
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    if (direction != 'L') {
-                        direction = 'R';
-                    }
-                    break;
-                case KeyEvent.VK_UP:
-                    if (direction != 'D') {
-                        direction = 'U';
-                    }
-                    break;
-                case KeyEvent.VK_DOWN:
-                    if (direction != 'U') {
-                        direction = 'D';
-                    }
-                    break;
+            if (!directionChanged) {
+
+                int key = e.getKeyCode();
+                switch (key) {
+                    case KeyEvent.VK_LEFT:
+                        if (direction != 'R') {
+                            direction = 'L';
+                        }
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        if (direction != 'L') {
+                            direction = 'R';
+                        }
+                        break;
+                    case KeyEvent.VK_UP:
+                        if (direction != 'D') {
+                            direction = 'U';
+                        }
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        if (direction != 'U') {
+                            direction = 'D';
+                        }
+                        break;
+                }
             }
+            directionChanged = true;
         }
     }
+
 }
