@@ -10,7 +10,7 @@ public class PowerUP {
     boolean magnetActive = false;
     boolean doubleLengthActive = false;
 
-    private static final int POWERUP_DURATION = 10000;
+    private static final int POWERUP_DURATION = 7000;
     private Timer powerUpTimer;
 
     public PowerUP() {
