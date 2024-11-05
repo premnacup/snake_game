@@ -8,7 +8,7 @@ A modern twist on the classic Snake game, developed in Java. This version adds e
 - **Power-Ups**:
   - **Double Length**: Instantly doubles the snake’s length, making gameplay trickier as you navigate the stage.
   - **Magnet**: Pulls nearby food items closer to the snake, making it easier to grow.
-- **Obstacles**: Each stage includes obstacles that the snake must avoid, adding strategic elements to the game.
+- **Obstacles**: A stage includes obstacles that the snake must avoid, adding strategic elements to the game.
 
 ## How to Play
 
@@ -18,6 +18,5 @@ A modern twist on the classic Snake game, developed in Java. This version adds e
    - **Double Length**: Doubles the snake’s length instantly.
    - **Magnet**: Attracts food items toward the snake for easier collection.
 4. Avoid colliding with the stage’s obstacles, walls, or the snake’s own body.
-5. Progress through stages by reaching score milestones, unlocking new layouts and challenges.
 
 Enjoy the game!
